@@ -10,53 +10,66 @@
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
-struct Query {
+struct Query 
+{
     set<string> plus;
     set<string> minus;
 };
-string ReadLine() {
+string ReadLine() 
+{
     string s;
     getline(cin, s);
     return s;
 }
 
-int ReadLineWithNumber() {
+int ReadLineWithNumber() 
+{
     int result = 0;
     cin >> result;
     ReadLine();
     return result;
 }
 
-vector<string> SplitIntoWords(const string& text) {
+vector<string> SplitIntoWords(const string& text) 
+{
     vector<string> words;
     string word;
-    for (const char c : text) {
-        if (c == ' ') {
-            if (!word.empty()) {
+    for (const char c : text) 
+    {
+        if (c == ' ') 
+        {
+            if (!word.empty()) 
+            {
                 words.push_back(word);
                 word.clear();
             }
         }
-        else {
+        else
+        {
             word += c;
         }
     }
-    if (!word.empty()) {
+    if (!word.empty()) 
+    {
         words.push_back(word);
     }
 
     return words;
 }
 
-struct Document {
+struct Document 
+{
     int id;
     double relevance;
 };
 
-class SearchServer {
+class SearchServer 
+{
 public:
-    void SetStopWords(const string& text) {
-        for (const string& word : SplitIntoWords(text)) {
+    void SetStopWords(const string& text) 
+    {
+        for (const string& word : SplitIntoWords(text)) 
+        {
             stop_words_.insert(word);
         }
     }
@@ -79,10 +92,12 @@ public:
         auto matched_documents = FindAllDocuments(query_words);
 
         sort(matched_documents.begin(), matched_documents.end(),
-            [](const Document& lhs, const Document& rhs) {
+            [](const Document& lhs, const Document& rhs)
+            {
                 return lhs.relevance > rhs.relevance;
             });
-        if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) {
+        if (matched_documents.size() > MAX_RESULT_DOCUMENT_COUNT) 
+        {
             matched_documents.resize(MAX_RESULT_DOCUMENT_COUNT);
         }
         return matched_documents;
@@ -95,14 +110,17 @@ private:
 
     set<string> stop_words_;
 
-    bool IsStopWord(const string& word) const {
+    bool IsStopWord(const string& word) const 
+    {
         return stop_words_.count(word) > 0;
     }
 
     vector<string> SplitIntoWordsNoStop(const string& text) const {
         vector<string> words;
-        for (const string& word : SplitIntoWords(text)) {
-            if (!IsStopWord(word)) {
+        for (const string& word : SplitIntoWords(text)) 
+        {
+            if (!IsStopWord(word)) 
+            {
                 words.push_back(word);
             }
         }
@@ -122,7 +140,8 @@ private:
             else
             {
                 string temp = word.substr(1);
-                if (!IsStopWord(temp)) {
+                if (!IsStopWord(temp)) 
+                {
                     query.minus.insert(temp);
                 }
             }
@@ -132,8 +151,11 @@ private:
     }
     double ComputeWordInverseDocumentFreq(const string& word) const
     {
-        if (!word_to_document_freqs_.contains(word)) return 0;
-        if (word_to_document_freqs_.at(word).size() == 0) return 0;
+       
+        if (word_to_document_freqs_.at(word).size() == 0)
+        {
+            return 0;
+        }
         return log(document_count * 1.0 / word_to_document_freqs_.at(word).size());
     }
 
@@ -144,8 +166,9 @@ private:
         map<int, double> document_to_relevance;
         for (const auto& word : query_words.plus)
         {
-            double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
             if (!word_to_document_freqs_.contains(word)) continue;
+            double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
+            
             for (const auto& [document_id, term_freq] : word_to_document_freqs_.at(word))
             {
                 document_to_relevance[document_id] += term_freq * inverse_document_freq;
@@ -177,7 +200,8 @@ SearchServer CreateSearchServer()
     search_server.SetStopWords(ReadLine());
 
     const int document_count = ReadLineWithNumber();
-    for (int document_id = 0; document_id < document_count; ++document_id) {
+    for (int document_id = 0; document_id < document_count; ++document_id) 
+    {
         search_server.AddDocument(document_id, ReadLine());
     }
 
