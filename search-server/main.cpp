@@ -87,7 +87,8 @@ public:
 
     }
 
-    vector<Document> FindTopDocuments(const string& raw_query) const {
+    vector<Document> FindTopDocuments(const string& raw_query) const
+{
         const Query query_words = ParseQuery(raw_query);
         auto matched_documents = FindAllDocuments(query_words);
 
