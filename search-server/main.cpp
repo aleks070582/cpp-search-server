@@ -81,7 +81,7 @@ enum class DocumentStatus {
 
 class SearchServer {
 public:
-    inline static constexpr int INVALID_DOCUMENT_ID = -1;
+
 
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words)
@@ -101,26 +101,22 @@ public:
     }
 
     void AddDocument(int document_id, const string& document, DocumentStatus status,
-        const vector<int>& ratings) {
+        const vector<int>& ratings)
+    {
 
-
-        if (!IsValidWord(document))
+        for (const int ch : document_ids_)
         {
-            throw invalid_argument("document contain symbol 0-31");
-        }
-        if (!document_ids_.empty())
-        {
-            for (const int ch : document_ids_)
+            if (ch == document_id)
             {
-                if (ch == document_id || document_id < 0)
-                {
-                    throw invalid_argument("this id already used");
-                }
+                throw invalid_argument("this id already used");
+            }
+
+            else if (document_id < 0)
+            {
+                throw invalid_argument("this id incorrect");
             }
         }
         const vector<string> words = SplitIntoWordsNoStop(document);
-
-
         const double inv_word_count = 1.0 / words.size();
         for (const string& word : words) {
             word_to_document_freqs_[word][document_id] += inv_word_count;
@@ -133,30 +129,14 @@ public:
     template <typename DocumentPredicate>
     vector<Document> FindTopDocuments(const string& raw_query, DocumentPredicate document_predicate
     ) const {
-        if (!IsValidWord(raw_query))
-        {
-            throw invalid_argument("query not correct");
-        }
-        char prevch = 31;
-        for (const char ch : raw_query)
-        {
-            if (ch == prevch && ch == '-')
-            {
-                throw invalid_argument("query not correct");
-            }
-            if (prevch == '-' && ch == ' ')
-            {
-                throw invalid_argument("query not correct");
-            }
-            prevch = ch;
-        }
+
 
         const Query query = ParseQuery(raw_query);
         for (const string& ch : query.minus_words)
         {
             if (ch == "") throw invalid_argument("query not correct");
         }
-        
+
 
         vector<Document> match_document = FindAllDocuments(query, document_predicate);
 
@@ -192,34 +172,17 @@ public:
         return documents_.size();
     }
 
-    // tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query,
-    //     int document_id) const
+
     tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id
     ) const
     {
-        if (!IsValidWord(raw_query))
-        {
-            throw invalid_argument("query not correct");
-        }
-        char prevch = 31;
-        for (const char ch : raw_query)
-        {
-            if (ch == prevch && ch == '-')
-            {
-                throw invalid_argument("query not correct");
-            }
-            if ((prevch == '-' && ch == ' '))
-            {
-                throw invalid_argument("query not correct");
-            }
-            prevch = ch;
-        }
+
         const Query query = ParseQuery(raw_query);
         for (const string& ch : query.minus_words)
         {
             if (ch == "") throw invalid_argument("query not correct");
         }
-        
+
         vector<string> matched_words;
         for (const string& word : query.plus_words) {
             if (word_to_document_freqs_.count(word) == 0) {
@@ -244,11 +207,7 @@ public:
     }
     int GetDocumentId(int index) const
     {
-        // if (document_ids_.empty()) throw out_of_range("incorrect id");
-        // if (index<0 || index>(document_ids_.size() - 1))
-        // {
-         //    throw out_of_range("incorrect id");
-        // }
+
         return document_ids_.at(index);
     }
 
@@ -274,8 +233,14 @@ private:
 
     vector<string> SplitIntoWordsNoStop(const string& text) const {
         vector<string> words;
+
         for (const string& word : SplitIntoWords(text)) {
-            if (!IsStopWord(word)) {
+            if (!IsStopWord(word))
+            {
+                if (!IsValidWord(word))
+                {
+                    throw invalid_argument("document contain symbol 0-31");
+                }
                 words.push_back(word);
             }
         }
@@ -300,9 +265,18 @@ private:
     };
 
     QueryWord ParseQueryWord(string text) const {
+        if (!IsValidWord(text))
+        {
+            throw invalid_argument("query not correct");
+        }
         bool is_minus = false;
         // Word shouldn't be empty
         if (text[0] == '-') {
+            if (text.size() > 1 && text.at(1) == '-')
+            {
+                throw invalid_argument("query not correct");
+            }
+
             is_minus = true;
             text = text.substr(1);
         }
