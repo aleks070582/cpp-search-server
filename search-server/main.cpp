@@ -279,6 +279,10 @@ private:
 
             is_minus = true;
             text = text.substr(1);
+            if(text==""s)
+            {
+                throw invalid_argument("query not correct");
+            }
         }
         return { text, is_minus, IsStopWord(text) };
     }
