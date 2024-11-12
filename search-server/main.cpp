@@ -1,3 +1,4 @@
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -88,7 +89,7 @@ public:
         : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
         for (const string& ch : stop_words_)
         {
-            if (!IsValidWord(ch)) throw invalid_argument("bad symbol");
+            if (!IsValidWord(ch)) throw invalid_argument("contain symbol 0-31");
         }
 
     }
@@ -113,7 +114,7 @@ public:
 
             else if (document_id < 0)
             {
-                throw invalid_argument("this id incorrect");
+                throw invalid_argument("this id below 0");
             }
         }
         const vector<string> words = SplitIntoWordsNoStop(document);
@@ -132,12 +133,7 @@ public:
 
 
         const Query query = ParseQuery(raw_query);
-        for (const string& ch : query.minus_words)
-        {
-            if (ch == "") throw invalid_argument("query not correct");
-        }
-
-
+        
         vector<Document> match_document = FindAllDocuments(query, document_predicate);
 
         sort(match_document.begin(), match_document.end(),
@@ -178,10 +174,7 @@ public:
     {
 
         const Query query = ParseQuery(raw_query);
-        for (const string& ch : query.minus_words)
-        {
-            if (ch == "") throw invalid_argument("query not correct");
-        }
+        
 
         vector<string> matched_words;
         for (const string& word : query.plus_words) {
@@ -267,21 +260,21 @@ private:
     QueryWord ParseQueryWord(string text) const {
         if (!IsValidWord(text))
         {
-            throw invalid_argument("query not correct");
+            throw invalid_argument("contain symbol 0-31");
         }
         bool is_minus = false;
         // Word shouldn't be empty
         if (text[0] == '-') {
             if (text.size() > 1 && text.at(1) == '-')
             {
-                throw invalid_argument("query not correct");
+                throw invalid_argument("query contain -- ");
             }
 
             is_minus = true;
             text = text.substr(1);
             if(text==""s)
             {
-                throw invalid_argument("query not correct");
+                throw invalid_argument("query is too short");
             }
         }
         return { text, is_minus, IsStopWord(text) };
