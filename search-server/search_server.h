@@ -17,13 +17,7 @@
 class SearchServer {
 public:
     template <typename StringContainer>
-    explicit SearchServer(const StringContainer& stop_words)
-        : stop_words_(MakeUniqueNonEmptyStrings(stop_words))  // Extract non-empty stop words
-    {
-        if (!std::all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
-            throw std::invalid_argument("Some of stop words are invalid");
-        }
-    }
+    explicit SearchServer(const StringContainer& stop_words);
 
     explicit SearchServer(const std::string& stop_words_text)
         : SearchServer(SplitIntoWords(stop_words_text))  // Invoke delegating constructor
@@ -80,7 +74,7 @@ private:
     }
 
     static bool IsValidWord(const std::string& word) {
-        
+
         return none_of(word.begin(), word.end(), [](char c) {
             return c >= '\0' && c < ' ';
             });
@@ -90,11 +84,11 @@ private:
 
     static int ComputeAverageRating(const std::vector<int>& ratings);
 
-     QueryWord ParseQueryWord(const std::string& text) const;
+    QueryWord ParseQueryWord(const std::string& text) const;
 
-     Query ParseQuery(const std::string& text) const;
+    Query ParseQuery(const std::string& text) const;
 
-     double ComputeWordInverseDocumentFreq(const std::string& word) const {
+    double ComputeWordInverseDocumentFreq(const std::string& word) const {
         return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
     }
 
@@ -125,7 +119,7 @@ std::vector<Document> SearchServer::FindTopDocuments(const std::string& raw_quer
 
 template <typename DocumentPredicate>
 std::vector<Document> SearchServer::FindAllDocuments(const SearchServer::Query& query, DocumentPredicate document_predicate) const {
-   std::map<int, double> document_to_relevance;
+    std::map<int, double> document_to_relevance;
     for (const std::string& word : query.plus_words) {
         if (word_to_document_freqs_.count(word) == 0) {
             continue;
@@ -153,4 +147,12 @@ std::vector<Document> SearchServer::FindAllDocuments(const SearchServer::Query& 
         matched_documents.push_back({ document_id, relevance, documents_.at(document_id).rating });
     }
     return matched_documents;
+}
+
+template <typename StringContainer>
+SearchServer::SearchServer(const StringContainer& stop_words): stop_words_(MakeUniqueNonEmptyStrings(stop_words))  
+{
+    if (!std::all_of(stop_words_.begin(), stop_words_.end(), IsValidWord)) {
+        throw std::invalid_argument("Some of stop words are invalid");
+    }
 }
